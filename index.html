@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta name="theme-color" content="#071d49">
+
+  <title>서울대배 조추첨</title>
+
+  <link rel="manifest" href="./manifest.json">
+
+  <style>
+    :root {
+      --navy: #071d49;
+      --blue: #0a3478;
+      --light-blue: #65a9eb;
+      --gold: #f6c85f;
+      --white: #ffffff;
+      --gray: #e9eef5;
+      --text-gray: #91a4bf;
+      --danger: #d24d5c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        Pretendard,
+        "Noto Sans KR",
+        "Malgun Gothic",
+        sans-serif;
+      color: white;
+      background:
+        radial-gradient(
+          circle at top right,
+          #1b589e 0,
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          #03102b,
+          var(--navy)
+        );
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1500px, 94vw);
+      min-height: 100vh;
+      margin: auto;
+      padding: 28px 0;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      margin-bottom: 25px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 82px;
+      height: 82px;
+      flex-shrink: 0;
+      border-radius: 20px;
+      padding: 7px;
+      object-fit: contain;
+      background: white;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text small {
+      color: var(--light-blue);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+    }
+
+    .brand-text h1 {
+      margin: 5px 0 0;
+      font-size: clamp(25px, 3vw, 44px);
+      letter-spacing: -0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 12px;
+      padding: 0 18px;
+      font-weight: 850;
+      transition: 0.15s;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .header-button {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 20px;
+    }
+
+    .draw-screen {
+      position: relative;
+      display: flex;
+      min-height: 610px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 28px;
+      padding: 40px;
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(101, 169, 235, 0.3),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #0a3478,
+          #041631
+        );
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .live-label {
+      position: absolute;
+      top: 28px;
+      left: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .draw-label {
+      margin: 0 0 22px;
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: 0.25em;
+    }
+
+    #teamDisplay {
+      display: flex;
+      width: 100%;
+      min-height: 160px;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(50px, 7vw, 110px);
+      font-weight: 950;
+      letter-spacing: -0.07em;
+      line-height: 1.1;
+      word-break: keep-all;
+      text-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    #teamDisplay.rolling {
+      color: #b8ccec;
+      transform: scale(0.97);
+    }
+
+    #teamDisplay.selected {
+      color: var(--gold);
+      animation: reveal 0.65s ease-out;
+    }
+
+    @keyframes reveal {
+      0% {
+        opacity: 0;
+        transform: scale(0.7);
+      }
+
+      65% {
+        opacity: 1;
+        transform: scale(1.08);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    #message {
+      min-height: 28px;
+      margin: 17px 0 34px;
+      color: #b8c9e4;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .draw-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 11px;
+    }
+
+    .draw-button {
+      min-width: 230px;
+      min-height: 61px;
+      color: var(--navy);
+      background: var(--gold);
+      font-size: 21px;
+      box-shadow: 0 12px 30px rgba(246, 200, 95, 0.24);
+    }
+
+    .undo-button {
+      min-height: 61px;
+      color: white;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .shortcut {
+      position: absolute;
+      bottom: 23px;
+      color: #8198b8;
+      font-size: 13px;
+    }
+
+    .side-panel {
+      display: flex;
+      min-height: 610px;
+      flex-direction: column;
+      border-radius: 24px;
+      padding: 24px;
+      color: #162844;
+      background: white;
+      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.18);
+    }
+
+    .counter {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gray);
+      padding-bottom: 20px;
+    }
+
+    .counter small {
+      display: block;
+      margin-bottom: 5px;
+      color: #718097;
+      font-weight: 800;
+    }
+
+    #remainingCount {
+      color: var(--blue);
+      font-size: 42px;
+      font-weight: 950;
+    }
+
+    #totalCount {
+      color: #718097;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .history-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 22px 0 12px;
+    }
+
+    .history-title h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    #historyList {
+      flex: 1;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    #historyList li {
+      display: grid;
+      grid-template-columns: 35px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #edf1f6;
+      padding: 11px 5px;
+      font-weight: 850;
+    }
+
+    .history-number {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 9px;
+      color: var(--blue);
+      background: #e9f2fc;
+      font-size: 12px;
+    }
+
+    .empty {
+      display: block !important;
+      border: 0 !important;
+      padding-top: 50px !important;
+      color: #8e9bab;
+      text-align: center;
+    }
+
+    .reset-button {
+      margin-top: 15px;
+      color: var(--danger);
+      background: #fff0f2;
+    }
+
+    dialog {
+      width: min(720px, calc(100% - 30px));
+      max-height: calc(100vh - 30px);
+      overflow-y: auto;
+      border: 0;
+      border-radius: 24px;
+      padding: 0;
+      color: #162844;
+      background: white;
+      box-shadow: 0 35px 100px rgba(0, 0, 0, 0.4);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 7, 22, 0.75);
+      backdrop-filter: blur(6px);
+    }
+
+    .settings {
+      padding: 28px;
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 27px;
+    }
+
+    .close-button {
+      width: 42px;
+      min-height: 42px;
+      border-radius: 50%;
+      padding: 0;
+      color: #66768c;
+      background: #eef2f6;
+      font-size: 24px;
+    }
+
+    label {
+      display: block;
+      margin-top: 17px;
+      color: #34445a;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      margin-top: 8px;
+      border: 1px solid #ccd7e4;
+      border-radius: 11px;
+      padding: 12px;
+      color: #162844;
+      background: white;
+    }
+
+    textarea {
+      min-height: 285px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .team-count {
+      float: right;
+      color: var(--blue);
+    }
+
+    .settings-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 23px;
+      border-top: 1px solid var(--gray);
+      padding-top: 19px;
+    }
+
+    .cancel-button {
+      color: #506079;
+      background: #edf1f6;
+    }
+
+    .save-button {
+      color: white;
+      background: var(--blue);
+    }
+
+    @media (max-width: 850px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        min-height: 400px;
+      }
+
+      header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .header-buttons button {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 550px) {
+      .app {
+        width: calc(100% - 24px);
+        padding-top: 16px;
+      }
+
+      .logo {
+        width: 62px;
+        height: 62px;
+      }
+
+      .brand-text h1 {
+        white-space: normal;
+      }
+
+      .draw-screen {
+        min-height: 540px;
+        padding: 25px 17px;
+      }
+
+      .draw-buttons {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .draw-buttons button {
+        width: 100%;
+      }
+    }
+
+    body.fullscreen-mode {
+      overflow: hidden;
+    }
+
+    body.fullscreen-mode .app {
+      width: 100%;
+      height: 100vh;
+      padding: 18px;
+    }
+
+    body.fullscreen-mode header {
+      min-height: 75px;
+      margin-bottom: 12px;
+    }
+
+    body.fullscreen-mode .header-buttons,
+    body.fullscreen-mode .side-panel {
+      display: none;
+    }
+
+    body.fullscreen-mode .main-layout {
+      height: calc(100vh - 105px);
+      grid-template-columns: 1fr;
+    }
+
+    body.fullscreen-mode .draw-screen {
+      min-height: 0;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <img
+  src="./logo.png"
+  class="logo"
+  alt="서울대 배구부 로고"
+>
+
+        <div class="brand-text">
+          <small>SNU VOLLEYBALL TEAM</small>
+          <h1 id="eventTitle">서울대배 조추첨</h1>
+        </div>
+      </div>
+
+      <div class="header-buttons">
+        <button
+          id="installButton"
+          class="header-button"
+          type="button"
+          hidden
+        >
+          앱 설치
+        </button>
+
+        <button
+          id="settingsButton"
+          class="header-button"
+          type="button"
+        >
+          대회 설정
+        </button>
+
+        <button
+          id="fullscreenButton"
+          class="header-button"
+          type="button"
+        >
+          전체화면
+        </button>
+      </div>
+    </header>
+
+    <section class="main-layout">
+      <div class="draw-screen">
+        <div class="live-label">● LIVE DRAW</div>
+
+        <p class="draw-label">NEXT TEAM</p>
+
+        <div id="teamDisplay">
+          참가팀을 등록해 주세요
+        </div>
+
+        <p id="message">
+          대회 설정에서 참가팀 명단을 입력해 주세요.
+        </p>
+
+        <div class="draw-buttons">
+          <button
+            id="drawButton"
+            class="draw-button"
+            type="button"
+          >
+            추첨 시작
+          </button>
+
+          <button
+            id="undoButton"
+            class="undo-button"
+            type="button"
+          >
+            직전 추첨 취소
+          </button>
+        </div>
+
+        <div class="shortcut">
+          Space: 추첨 시작 · F: 전체화면
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="counter">
+          <div>
+            <small>남은 참가팀</small>
+            <span id="remainingCount">0</span>
+          </div>
+
+          <span id="totalCount">총 0팀</span>
+        </div>
+
+        <div class="history-title">
+          <h2>추첨 순서</h2>
+          <span id="drawnCount">0팀</span>
+        </div>
+
+        <ol id="historyList">
+          <li class="empty">
+            아직 추첨된 팀이 없습니다.
+          </li>
+        </ol>
+
+        <button
+          id="resetButton"
+          class="reset-button"
+          type="button"
+        >
+          전체 추첨 초기화
+        </button>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form id="settingsForm" class="settings">
+      <div class="dialog-header">
+        <h2>대회 설정</h2>
+
+        <button
+          id="closeSettingsButton"
+          class="close-button"
+          type="button"
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </div>
+
+      <label>
+        화면에 표시할 대회명
+
+        <input
+          id="titleInput"
+          type="text"
+          maxlength="60"
+          required
+        >
+      </label>
+
+      <label>
+        참가팀 명단
+
+        <span
+          id="teamInputCount"
+          class="team-count"
+        >
+          0팀
+        </span>
+
+        <textarea
+          id="teamsInput"
+          placeholder="한 줄에 한 팀씩 입력하세요.&#10;&#10;서울대학교&#10;국민대학교&#10;숭실대학교"
+          required
+        ></textarea>
+      </label>
+
+      <div class="settings-footer">
+        <button
+          id="cancelSettingsButton"
+          class="cancel-button"
+          type="button"
+        >
+          취소
+        </button>
+
+        <button
+          class="save-button"
+          type="submit"
+        >
+          설정 저장
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = "snu-volleyball-draw";
+
+    const defaultState = {
+      title: "제14회 서울대배 전국 6인제 배구대회",
+      teams: [],
+      history: []
+    };
+
+    let state = loadState();
+    let drawing = false;
+    let installPrompt = null;
+
+    const eventTitle =
+      document.getElementById("eventTitle");
+
+    const teamDisplay =
+      document.getElementById("teamDisplay");
+
+    const message =
+      document.getElementById("message");
+
+    const drawButton =
+      document.getElementById("drawButton");
+
+    const undoButton =
+      document.getElementById("undoButton");
+
+    const remainingCount =
+      document.getElementById("remainingCount");
+
+    const totalCount =
+      document.getElementById("totalCount");
+
+    const drawnCount =
+      document.getElementById("drawnCount");
+
+    const historyList =
+      document.getElementById("historyList");
+
+    const settingsDialog =
+      document.getElementById("settingsDialog");
+
+    const settingsForm =
+      document.getElementById("settingsForm");
+
+    const titleInput =
+      document.getElementById("titleInput");
+
+    const teamsInput =
+      document.getElementById("teamsInput");
+
+    const teamInputCount =
+      document.getElementById("teamInputCount");
+
+    const installButton =
+      document.getElementById("installButton");
+
+    function loadState() {
+      try {
+        const saved =
+          JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (
+          saved &&
+          Array.isArray(saved.teams) &&
+          Array.isArray(saved.history)
+        ) {
+          return saved;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      return { ...defaultState };
+    }
+
+    function saveState() {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(state)
+      );
+    }
+
+    function parseTeams(text) {
+      const teamNames = text
+        .split(/\r?\n/)
+        .map(team => team.trim())
+        .filter(team => team.length > 0);
+
+      return [...new Set(teamNames)];
+    }
+
+    function getRemainingTeams() {
+      const drawnTeams = new Set(state.history);
+
+      return state.teams.filter(
+        team => !drawnTeams.has(team)
+      );
+    }
+
+    function randomIndex(max) {
+      if (max <= 1) {
+        return 0;
+      }
+
+      const randomArray = new Uint32Array(1);
+      const range = 4294967296;
+      const limit = range - (range % max);
+
+      do {
+        crypto.getRandomValues(randomArray);
+      } while (randomArray[0] >= limit);
+
+      return randomArray[0] % max;
+    }
+
+    function render() {
+      const remainingTeams = getRemainingTeams();
+      const total = state.teams.length;
+      const drawn = state.history.length;
+
+      eventTitle.textContent = state.title;
+
+      remainingCount.textContent =
+        remainingTeams.length;
+
+      totalCount.textContent =
+        `총 ${total}팀`;
+
+      drawnCount.textContent =
+        `${drawn}팀`;
+
+      drawButton.disabled =
+        drawing || remainingTeams.length === 0;
+
+      undoButton.disabled =
+        drawing || state.history.length === 0;
+
+      if (!drawing) {
+        if (total === 0) {
+          teamDisplay.textContent =
+            "참가팀을 등록해 주세요";
+
+          message.textContent =
+            "대회 설정에서 참가팀 명단을 입력해 주세요.";
+        } else if (remainingTeams.length === 0) {
+          teamDisplay.textContent =
+            "추첨 완료";
+
+          message.textContent =
+            "모든 참가팀의 추첨이 완료되었습니다.";
+        } else if (state.history.length > 0) {
+          const lastTeam =
+            state.history[state.history.length - 1];
+
+          teamDisplay.textContent =
+            lastTeam;
+
+          message.textContent =
+            `${lastTeam} 대표자는 앞으로 나와주세요!`;
+        } else {
+          teamDisplay.textContent =
+            "READY";
+
+          message.textContent =
+            "추첨 시작 버튼을 눌러주세요.";
+        }
+      }
+
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = "";
+
+      if (state.history.length === 0) {
+        const emptyItem =
+          document.createElement("li");
+
+        emptyItem.className = "empty";
+        emptyItem.textContent =
+          "아직 추첨된 팀이 없습니다.";
+
+        historyList.appendChild(emptyItem);
+
+        return;
+      }
+
+      state.history.forEach((team, index) => {
+        const item =
+          document.createElement("li");
+
+        const number =
+          document.createElement("span");
+
+        const name =
+          document.createElement("span");
+
+        number.className = "history-number";
+        number.textContent =
+          String(index + 1).padStart(2, "0");
+
+        name.textContent = team;
+
+        item.append(number, name);
+        historyList.appendChild(item);
+      });
+
+      historyList.scrollTop =
+        historyList.scrollHeight;
+    }
+
+    function startDraw() {
+      if (drawing) {
+        return;
+      }
+
+      const remainingTeams =
+        getRemainingTeams();
+
+      if (remainingTeams.length === 0) {
+        if (state.teams.length === 0) {
+          openSettings();
+        }
+
+        return;
+      }
+
+      drawing = true;
+
+      drawButton.disabled = true;
+      undoButton.disabled = true;
+
+      teamDisplay.classList.remove("selected");
+      teamDisplay.classList.add("rolling");
+
+      message.textContent =
+        "무작위 추첨 중입니다...";
+
+      let changeCount = 0;
+      const totalChanges = 30;
+
+      const animation =
+        setInterval(() => {
+          const previewTeam =
+            remainingTeams[
+              randomIndex(remainingTeams.length)
+            ];
+
+          teamDisplay.textContent =
+            previewTeam;
+
+          changeCount += 1;
+
+          if (changeCount >= totalChanges) {
+            clearInterval(animation);
+            finishDraw(remainingTeams);
+          }
+        }, 65);
+    }
+
+    function finishDraw(remainingTeams) {
+      const selectedTeam =
+        remainingTeams[
+          randomIndex(remainingTeams.length)
+        ];
+
+      state.history.push(selectedTeam);
+
+      drawing = false;
+
+      saveState();
+
+      teamDisplay.classList.remove("rolling");
+      teamDisplay.classList.add("selected");
+
+      render();
+    }
+
+    function undoDraw() {
+      if (
+        drawing ||
+        state.history.length === 0
+      ) {
+        return;
+      }
+
+      const lastTeam =
+        state.history[
+          state.history.length - 1
+        ];
+
+      const confirmed = confirm(
+        `${lastTeam} 팀의 추첨을 취소할까요?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      state.history.pop();
+
+      teamDisplay.classList.remove(
+        "selected",
+        "rolling"
+      );
+
+      saveState();
+      render();
+    }
+
+    function resetDraw() {
+      if (state.history.length === 0) {
+        return;
+      }
+
+      const confirmed = confirm(
+        "모든 추첨 결과를 초기화할까요?"
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      state.history = [];
+
+      teamDisplay.classList.remove(
+        "selected",
+        "rolling"
+      );
+
+      saveState();
+      render();
+    }
+
+    function openSettings() {
+      titleInput.value = state.title;
+
+      teamsInput.value =
+        state.teams.join("\n");
+
+      updateTeamCount();
+
+      settingsDialog.showModal();
+    }
+
+    function closeSettings() {
+      settingsDialog.close();
+    }
+
+    function updateTeamCount() {
+      const count =
+        parseTeams(teamsInput.value).length;
+
+      teamInputCount.textContent =
+        `${count}팀`;
+    }
+
+    function saveSettings(event) {
+      event.preventDefault();
+
+      const newTitle =
+        titleInput.value.trim();
+
+      const newTeams =
+        parseTeams(teamsInput.value);
+
+      if (newTeams.length === 0) {
+        alert("참가팀을 한 팀 이상 입력해 주세요.");
+        return;
+      }
+
+      const teamsChanged =
+        JSON.stringify(newTeams) !==
+        JSON.stringify(state.teams);
+
+      if (
+        teamsChanged &&
+        state.history.length > 0
+      ) {
+        const confirmed = confirm(
+          "참가팀 명단을 바꾸면 기존 추첨 결과가 초기화됩니다. 계속할까요?"
+        );
+
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      state.title =
+        newTitle || defaultState.title;
+
+      if (teamsChanged) {
+        state.teams = newTeams;
+        state.history = [];
+      }
+
+      saveState();
+      closeSettings();
+
+      teamDisplay.classList.remove(
+        "selected",
+        "rolling"
+      );
+
+      render();
+    }
+
+    async function toggleFullscreen() {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement
+            .requestFullscreen();
+
+          document.body.classList.add(
+            "fullscreen-mode"
+          );
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (error) {
+        document.body.classList.toggle(
+          "fullscreen-mode"
+        );
+      }
+    }
+
+    drawButton.addEventListener(
+      "click",
+      startDraw
+    );
+
+    undoButton.addEventListener(
+      "click",
+      undoDraw
+    );
+
+    document
+      .getElementById("resetButton")
+      .addEventListener(
+        "click",
+        resetDraw
+      );
+
+    document
+      .getElementById("settingsButton")
+      .addEventListener(
+        "click",
+        openSettings
+      );
+
+    document
+      .getElementById("closeSettingsButton")
+      .addEventListener(
+        "click",
+        closeSettings
+      );
+
+    document
+      .getElementById("cancelSettingsButton")
+      .addEventListener(
+        "click",
+        closeSettings
+      );
+
+    document
+      .getElementById("fullscreenButton")
+      .addEventListener(
+        "click",
+        toggleFullscreen
+      );
+
+    settingsForm.addEventListener(
+      "submit",
+      saveSettings
+    );
+
+    teamsInput.addEventListener(
+      "input",
+      updateTeamCount
+    );
+
+    document.addEventListener(
+      "fullscreenchange",
+      () => {
+        document.body.classList.toggle(
+          "fullscreen-mode",
+          Boolean(document.fullscreenElement)
+        );
+      }
+    );
+
+    document.addEventListener(
+      "keydown",
+      event => {
+        if (settingsDialog.open) {
+          return;
+        }
+
+        if (event.code === "Space") {
+          event.preventDefault();
+          startDraw();
+        }
+
+        if (
+          event.key.toLowerCase() === "f"
+        ) {
+          event.preventDefault();
+          toggleFullscreen();
+        }
+      }
+    );
+
+    window.addEventListener(
+      "beforeinstallprompt",
+      event => {
+        event.preventDefault();
+
+        installPrompt = event;
+        installButton.hidden = false;
+      }
+    );
+
+    installButton.addEventListener(
+      "click",
+      async () => {
+        if (!installPrompt) {
+          return;
+        }
+
+        installPrompt.prompt();
+
+        await installPrompt.userChoice;
+
+        installPrompt = null;
+        installButton.hidden = true;
+      }
+    );
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener(
+        "load",
+        () => {
+          navigator.serviceWorker
+            .register("./service-worker.js")
+            .catch(error => {
+              console.error(
+                "서비스 워커 등록 실패",
+                error
+              );
+            });
+        }
+      );
+    }
+
+    render();
+
+    if (state.teams.length === 0) {
+      setTimeout(openSettings, 300);
+    }
+  </script>
+</body>
+</html>
